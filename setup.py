@@ -18,7 +18,7 @@ if __name__ == '__main__':
     # on this system.
     setuptools.setup(
       name = 'diffval',
-      version = '0.10',
+      version = '0.11',
       description = 'Validates tests by comparing real output ' \
         + 'against expected output',
       author = 'Matt Born',
@@ -33,6 +33,6 @@ if __name__ == '__main__':
       py_modules = extension,
       entry_points = """
         [console_scripts]
-        diffval = diffval.interface:validate
+        diffval = diffval.interface:main
       """,
     )

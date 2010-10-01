@@ -2,7 +2,6 @@
 
 import difflib
 import os
-import subprocess
 
 def diff(left, right, log = None):
     if log:
@@ -68,12 +67,18 @@ class test:
         if self._session:
             self._results['stdout'] = self._session.output()
             self._results['stderr'] = self._session.errors()
-            if self._session.code != 0:
+            if self._session._code != 0:
                 if not 'stdout' in self._expects:
                     self._expects['stdout'] = []
                 if not 'stderr' in self._expects:
                     self._expects['stderr'] = []
-                self._results['stderr'] += ['<<< Session returned non-zero exit code >>>']
+                if self._session._code is not None: 
+                    self._results['stderr'] \
+                      += ['<<< Session exited with code ' \
+                        + str(self._session._code) + ' >>>']
+                else:
+                    self._results['stderr'] \
+                      += ['<<< Session canceled by user >>>']
 
         success = self._checksuccess()
 

@@ -81,7 +81,7 @@ def validate(paths, file = sys.stdout, mailto = None):
         server.sendmail(mailfrom, mailto, message)
         server.quit()
 
-if __name__ == '__main__':
+def main():
     parser = optparse.OptionParser()
     parser.add_option('-t', '--mailto', dest='mailto',
         help='Send report to MAILTO', metavar = 'MAILTO',
@@ -91,3 +91,6 @@ if __name__ == '__main__':
         default=sys.stdout)
     (options, args) = parser.parse_args()
     validate(paths = args, mailto = options.mailto, file = options.logfile)
+
+if __name__ == '__main__':
+    main()

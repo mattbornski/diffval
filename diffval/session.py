@@ -8,25 +8,24 @@ import tempfile
 
 class session:
     def __init__(self, executable, log = None, env = None):
+        self._code = None
+        self._stdout = []
+        self._stderr = []
         self._log = log
         if self._log:
             self._log.openElement('session', {'program':executable})
         signal.signal(signal.SIGTERM, self.cancel)
         try:
-            windows = (sys.platform == 'win32' \
-                or sys.platform == 'cygwin')
+            windows = (sys.platform == 'win32' or sys.platform == 'cygwin')
             self._session = subprocess.Popen(['env', executable] + self._args,
-                stdin = subprocess.PIPE,
-                stdout = subprocess.PIPE,
-                stderr = subprocess.PIPE,
-                # Experimenting on my Vista box - stdout/stderr don't
-                # seem to be captured well, so perhaps this will help.
-                shell = windows,
-                close_fds = not windows,
-                env = env)
-            self._code = None
-            self._stdout = []
-            self._stderr = []
+              stdin = subprocess.PIPE,
+              stdout = subprocess.PIPE,
+              stderr = subprocess.PIPE,
+              # Experimenting on my Vista box - stdout/stderr don't
+              # seem to be captured well, so perhaps this will help.
+              shell = windows,
+              close_fds = not windows,
+              env = env)
             input = None
             if self._input:
                 input = '\n'.join(self._input)
@@ -63,7 +62,7 @@ class session:
             # Bad things.
             self._stderr.append('<< Session terminated unexpectedly >>')
         if self._session.returncode is not None:
-            self.code = self._session.returncode
+            self._code = self._session.returncode
     def cancel(self):
         try:
             if self._session:
