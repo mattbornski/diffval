@@ -5,7 +5,12 @@ import os.path
 if __name__ == '__main__':
     # Define a Python extension.
     extension = [
-        'diffval'
+      'diffval.interface',
+      'diffval.idlval',
+      'diffval.pyval',
+      'diffval.log',
+      'diffval.session',
+      'diffval.test',
     ]
 
     # Invoke the setup code, which will (depending on the command line
@@ -26,4 +31,8 @@ if __name__ == '__main__':
         'Topic :: Software Development :: Testing',
       ],
       py_modules = extension,
+      entry_points = """
+        [console_scripts]
+        diffval = diffval.interface:validate
+      """,
     )
