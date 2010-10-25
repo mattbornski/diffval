@@ -3,17 +3,17 @@
 import difflib
 import os
 
-def diff(left, right, log = None):
+def diff(left, right, leftfile, rightfile, log = None):
     if log:
         log.openElement('diff')
 
-    diff_output = difflib.unified_diff(left, right)
-    diff_output = list(diff_output)
+    diff_output = difflib.unified_diff(left, right, leftfile, rightfile)
+    diff_output = [line.split('\n')[0] + '\n' for line in diff_output]
     success = (len(diff_output) == 0)
 
     if log:
         log.openElement('result', {'success':str(success)})
-        log.fillElement('\n'.join(diff_output))
+        log.fillElement(''.join(diff_output))
         log.closeElement('result')
 
         log.closeElement('diff')
@@ -92,7 +92,12 @@ class test:
     def _checksuccess(self):
         ok = True
         for pair in self._expects.keys():
+            filename = (os.path.splitext(self._path))[0]
+            if pair == 'stdout':
+                filename += '.out'
+            elif pair == 'stderr':
+                filename += '.err'
             if not diff(self._expects[pair], self._results[pair],
-                        log = self._log):
+                        filename, 'Actual output', log = self._log):
                 ok = False
         return ok

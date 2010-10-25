@@ -38,8 +38,11 @@ def index(path, log = None, types = {'py':'python', 'pro':'idl'}, \
 
     return items
 
-def validate(paths, file = sys.stdout, mailto = None):
-    logger = log.log(file = file)
+def validate(paths, file = sys.stdout, mailto = None, format = 'diff'):
+    if format == 'xml':
+        logger = log.xmllog(file = file)
+    else:
+        logger = log.difflog(file = file)
 
     logger.openElement('index')
     candidates = [os.path.abspath(path) for path in paths]
@@ -81,16 +84,46 @@ def validate(paths, file = sys.stdout, mailto = None):
         server.sendmail(mailfrom, mailto, message)
         server.quit()
 
+    return (tests == succeeded)
+
 def main():
-    parser = optparse.OptionParser()
-    parser.add_option('-t', '--mailto', dest='mailto',
-        help='Send report to MAILTO', metavar = 'MAILTO',
-        default=None)
-    parser.add_option('-l', '--log', dest='logfile',
-        help='Log results to FILE', metavar='FILE',
-        default=sys.stdout)
+    parser = optparse.OptionParser('usage: %prog [options] [path1 [path2 [...]]]')
+    delivery = optparse.OptionGroup(parser, 'Output delivery',
+      'Control how the log file is delivered to you after a run.')
+    delivery.add_option('-t', '--mailto', dest = 'mailto',
+      help = 'Email results to MAILTO', metavar = 'MAILTO',
+      default = None)
+    delivery.add_option('-l', '--log', dest = 'logfile',
+      help = 'Log results to FILE (default behavior with stdout as FILE)',
+      metavar = 'FILE', default = sys.stdout)
+    parser.add_option_group(delivery)
+
+    formatting = optparse.OptionGroup(parser, 'Output formatting',
+      'Control how the log file is formatted.')
+    formatting.add_option('-x', '--xml', action = 'store_true',
+      help = 'Log file is in XML')
+    formatting.add_option('-d', '--diff', action = 'store_true',
+      help = 'Log file is concatenated diffs (default behavior)')
+    parser.add_option_group(formatting)
     (options, args) = parser.parse_args()
-    validate(paths = args, mailto = options.mailto, file = options.logfile)
+
+    # Determine which format to use for output.
+    format = 'diff'
+    if options.xml and options.diff:
+        parser.error('Output formatting options are mutually exclusive')
+    elif options.xml:
+        format = 'xml'
+    # Implicitly validate the tests found in the PWD if nothing else is
+    # specified.
+    if len(args) == 0:
+        args.append(os.getcwd())
+    sys.exit(
+      0 if validate(
+        paths = args,
+        mailto = options.mailto,
+        file = options.logfile,
+        format = format)
+      else 1)
 
 if __name__ == '__main__':
     main()
