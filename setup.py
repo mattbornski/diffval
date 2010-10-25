@@ -18,7 +18,7 @@ if __name__ == '__main__':
     # on this system.
     setuptools.setup(
       name = 'diffval',
-      version = '0.12',
+      version = '0.13',
       description = 'Validates tests by comparing real output ' \
         + 'against expected output',
       author = 'Matt Born',

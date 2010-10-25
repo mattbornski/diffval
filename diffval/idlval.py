@@ -32,35 +32,11 @@ def index(line, array, exact = True):
         return None
 
 class idlsession(session.session):
-    def __init__(self, test, log = None):
-        # We need to initialize IDL with the correct path.  We'll be compiling
-        # the test itself quite explicitly, but presumably there are things
-        # which the test is testing that exist outside of the test.  The
-        # structure we implicitly require is this:
-        # Some path +
-        #           |
-        #           +-- foo.pro
-        #           |
-        #           +-- bar.pro
-        #           |
-        #           +-- fubar__define.pro
-        #           |
-        #           +-- tests +
-        #                     |
-        #                     +-- no_snafus_please.pro
-        #                     |
-        #                     +-- no_snafus_please.out
-        #
-        # The key here is that the "tests" directory lives within some larger
-        # directory, and it is understood that all tests in this directory are
-        # designed to test things in that larger directory, therefore the
-        # larger directory will be included in the IDL_PATH.
-        path = os.path.abspath(test)
-        (path, tail) = os.path.split(path)
-        while tail and (tail != 'tests'):
-            (path, tail) = os.path.split(path)
-        self._args = ['-IDL_PATH', '"+' + path + ':<IDL_DEFAULT>"',
-            '-IDL_MORE', 'False', '-quiet']
+    def __init__(self, test, include = [], log = None):
+        self._args = [
+          '-IDL_PATH', '"+' + ':'.join(include) + '<IDL_DEFAULT>"',
+          '-IDL_MORE', 'False', '-quiet'
+        ]
         # The input pipe is closed after the initial communicate() call,
         # so we need to queue up everything here.  It's not a very interactive
         # process.
@@ -91,8 +67,8 @@ class idlsession(session.session):
         session.session.__init__(self, executable = exe, log = log)
 
 class idltest(test.test):
-    def __init__(self, path, log = None):
-        test.test.__init__(self, path = path, log = log)
+    def __init__(self, *args, **kwargs):
+        test.test.__init__(self, *args, **kwargs)
 
         self._expects['memcheck'] = ['Heap Variables:     # Pointer: 0     # Object : 0']
         self._results['memcheck'] = []
@@ -100,7 +76,10 @@ class idltest(test.test):
         self._results['halting'] = []
 
     def _create(self):
-        return idlsession(test = self._path, log = self._log)
+        return idlsession(
+          test = self._path,
+          include = self._include,
+          log = self._log)
 
     def _checksuccess(self):
         # We instrument some special handling for the stderr stream here.

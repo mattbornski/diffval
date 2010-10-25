@@ -10,10 +10,9 @@ import pyval
 import log
 
 def index(path, log = None, types = {'py':'python', 'pro':'idl'}, \
-        verified = False):
+        include = None):
 
-    items = []
-    if not verified:
+    if include is None:
         # Determine if the path already falls within a "tests" directory,
         # in which case we should index everything, or whether we are
         # looking for a "tests" directory.
@@ -21,21 +20,27 @@ def index(path, log = None, types = {'py':'python', 'pro':'idl'}, \
         while tail and (tail != 'tests'):
             (head, tail) = os.path.split(head)
         if tail == 'tests':
-            verified = True
+            include = [head]
+            return index(path, log, types, include)
+        else:
+            include = []
 
-    if os.path.isdir(path):
-        for child in os.listdir(path):
-            items += index(path = os.path.join(path, child), \
-                        log = log, types = types, verified = verified)
-    elif verified:
+    items = []
+    if os.path.isfile(path):
         ext = ((os.path.splitext(path))[1])[1:]
         if ext in types:
             if log:
                 log.openElement('file', {'type':types[ext], 'path':path})
-            items += [path]
+            items += [(path, include)]
             if log:
                 log.closeElement('file')
-
+    elif os.path.isdir(path):
+        for child in os.listdir(path):
+            if os.path.isdir(child) and child == 'tests':
+                include += [path]
+            items += index(
+              path = os.path.join(path, child), \
+              log = log, types = types, include = include)
     return items
 
 def validate(paths, file = sys.stdout, mailto = None, format = 'diff'):
@@ -56,13 +61,13 @@ def validate(paths, file = sys.stdout, mailto = None, format = 'diff'):
     logger.openElement('execute')
     succeeded = 0
     tests = len(paths)
-    for path in paths:
+    for (path, include) in paths:
         result = None
         ext = (os.path.splitext(path))[1]
         if ext == '.pro':
-            result = idlval.idltest(path, log = logger).run()
+            result = idlval.idltest(path, include, log = logger).run()
         elif ext == '.py':
-            result = pyval.pytest(path, log = logger).run()
+            result = pyval.pytest(path, include, log = logger).run()
 
         if result == True:
             succeeded += 1

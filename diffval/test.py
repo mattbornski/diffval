@@ -21,18 +21,19 @@ def diff(left, right, leftfile, rightfile, log = None):
     return success
 
 class test:
-    def __init__(self, path = '', log = None):
+    def __init__(self, path = '', include = [], log = None):
         self._log = log
         self._path = path
         self._session = None
         self._expects = {'stdout':[], 'stderr':[]}
         self._results = {'stdout':[], 'stderr':[]}
 
+        # Determine the files we have to diff against.
         base = (os.path.splitext(self._path))[0]
         if os.path.isfile(base + '.out'):
             self._stdout = base + '.out'
             file = open(self._stdout, 'r')
-            self._expects['stdout'] = [line.strip() for line in file.readlines()]
+            self._expects['stdout'] = [line.split('\n')[0] for line in file.readlines()]
             file.close()
         else:
             self._stdout = None
@@ -41,11 +42,13 @@ class test:
         if os.path.isfile(base + '.err'):
             self._stderr = base + '.err'
             file = open(self._stderr, 'r')
-            self._expects['stderr'] = [line.strip() for line in file.readlines()]
+            self._expects['stderr'] = [line.split('\n')[0] for line in file.readlines()]
             file.close()
         else:
             self._stderr = None
             del self._expects['stderr']
+
+        self._include = include
 
     def _create(self):
         pass
