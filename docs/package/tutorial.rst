@@ -34,3 +34,5 @@ The test succeeds, because diffval sees that there is no file tricky.out, and so
   1
 
 The test failed, because unexpected messages on stderr are assumed to be failures.  To tell diffval that this is okay, you would want to have a file called "error.err" which contained just the word "foo".
+
+Up to now we have been telling diffval explicity which files to test.  In order to accommodate the large test suites that are needed for real-life products, diffval is designed to operate on "test trees".  A test tree is just a folder named "tests" which lives side-by-side with your code, but contains only test files.  diffval can then run all the tests in the entire folder without having to be told each individual filename.

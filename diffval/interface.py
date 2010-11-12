@@ -27,6 +27,8 @@ def index(path, log = None, types = {'py':'python', 'pro':'idl'}, \
 
     items = []
     if os.path.isfile(path):
+        # If a file is explicity mentioned, we will test it regardless
+        # of its location in a tree.
         ext = ((os.path.splitext(path))[1])[1:]
         if ext in types:
             if log:
@@ -35,12 +37,33 @@ def index(path, log = None, types = {'py':'python', 'pro':'idl'}, \
             if log:
                 log.closeElement('file')
     elif os.path.isdir(path):
+        # If a directory is mentioned, we will assume that directory
+        # contains a test tree somewhere.  We have to go find the "tests"
+        # directory, and from there we'll know what to do.  It's possible
+        # that we're already inside a test tree, in which case everything
+        # is fair game.
+        if log:
+            log.openElement('directory', {'path':path})
         for child in os.listdir(path):
-            if os.path.isdir(child) and child == 'tests':
-                include += [path]
-            items += index(
-              path = os.path.join(path, child), \
-              log = log, types = types, include = include)
+            if child[0] == '.':
+                continue
+            recurse = os.path.join(path, child)
+            if os.path.isdir(recurse):
+                if child == 'tests':
+                    items += index(
+                      path = recurse, \
+                      log = log, types = types, include = include + [path])
+                else:
+                    items += index(
+                      path = recurse, \
+                      log = log, types = types, include = include)
+            elif os.path.isfile(recurse):
+                if len(include) > 0:
+                    items += index(
+                      path = recurse, \
+                      log = log, types = types, include = include)
+        if log:
+            log.closeElement('directory')
     return items
 
 def validate(paths, file = sys.stdout, mailto = None, format = 'diff'):

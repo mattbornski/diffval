@@ -18,12 +18,12 @@ if __name__ == '__main__':
     # on this system.
     setuptools.setup(
       name = 'diffval',
-      version = '0.13',
+      version = '0.14',
       description = 'Validates tests by comparing real output ' \
         + 'against expected output',
       author = 'Matt Born',
-      author_email = 'mattborn@ssl.berkeley.edu',
-      url = 'http://efw.ssl.berkeley.edu/packages/diffval',
+      author_email = 'mtborn@gmail.com',
+      url = 'https://github.com/mattborn/diffval',
       classifiers = [
         'Development Status :: 3 - Alpha',
         'Intended Audience :: Developers',
